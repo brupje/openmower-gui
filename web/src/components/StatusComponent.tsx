@@ -55,17 +55,17 @@ export function StatusComponent() {
         </Col>
         <Col lg={8} xs={24}>
             <Card title={"Left ESC Status"}>
-                {renderEscStatus(status.LeftEscStatus)}
+                {/*renderEscStatus(status.LeftEscStatus)*/}
             </Card>
         </Col>
         <Col lg={8} xs={24}>
             <Card title={"Right ESC status"}>
-                {renderEscStatus(status.RightEscStatus)}
+                {/*renderEscStatus(status.RightEscStatus)*/}
             </Card>
         </Col>
         <Col lg={8} xs={24}>
             <Card title={"Mow ESC status"}>
-                {renderEscStatus(status.MowEscStatus)}
+                {/*renderEscStatus(status.MowEscStatus)*/}
             </Card>
         </Col>
     </Row>;

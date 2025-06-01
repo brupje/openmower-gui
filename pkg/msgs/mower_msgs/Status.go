@@ -3,8 +3,9 @@
 package mower_msgs
 
 import (
-	"github.com/bluenviron/goroslib/v2/pkg/msg"
 	"time"
+
+	"github.com/bluenviron/goroslib/v2/pkg/msg"
 )
 
 const (
@@ -24,13 +25,10 @@ type Status struct {
 	SoundModuleAvailable bool
 	SoundModuleBusy      bool
 	UiBoardAvailable     bool
-	UltrasonicRanges     [5]float32
-	Emergency            bool
-	VCharge              float32
-	VBattery             float32
-	ChargeCurrent        float32
 	MowEnabled           bool
-	LeftEscStatus        ESCStatus
-	RightEscStatus       ESCStatus
-	MowEscStatus         ESCStatus
+	EscStatus            uint8
+	EscTemperature       float32
+	EscCurrent           float32
+	MotorTemperature     float32
+	MotorRPM             float32
 }
