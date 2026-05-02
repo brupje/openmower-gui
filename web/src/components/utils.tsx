@@ -1,6 +1,7 @@
 import {CheckCircleTwoTone, CloseCircleTwoTone} from "@ant-design/icons";
 import {Progress} from "antd";
 import {COLORS} from "../theme/colors.ts";
+import Battery from "./Battery.tsx";
 
 export const booleanFormatter = (value: any) => (value === "On" || value === "Yes") ?
     <CheckCircleTwoTone twoToneColor={COLORS.primary}/> : <CloseCircleTwoTone
@@ -24,6 +25,11 @@ export const stateRenderer = (value: string | undefined) => {
             return value ?? "Offline"
     }
 };
+
+export const batteryFormatter = (batteryPercent: any) => {
+    return <Battery size={32} batteryPercent={batteryPercent} style={{color: batteryPercent > 50 ? COLORS.primary : (batteryPercent > 20 ? COLORS.warning : COLORS.danger), fontSize: 24}} /> ;
+}
+
 export const progressFormatter = (value: any) => {
     return <Progress steps={3} percent={value} size={25} showInfo={false} strokeColor={COLORS.primary}/>
 };
