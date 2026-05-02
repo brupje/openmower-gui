@@ -5,6 +5,7 @@ import {stateRenderer} from "./utils.tsx";
 import {useThemeMode} from "../theme/ThemeContext.tsx";
 import {useApi} from "../hooks/useApi.ts";
 import type {MenuProps} from "antd";
+import Battery from "./Battery.tsx";
 
 const pulseKeyframes = `
 @keyframes mowerPulseGreen {
@@ -36,7 +37,7 @@ export const MowerStatus = () => {
     const guiApi = useApi();
     const {notification} = App.useApp();
     const gpsPercent = Math.round((highLevelStatus.GpsQualityPercent ?? 0) * 100);
-    const batteryPercent = Math.round((highLevelStatus.BatteryPercent ?? 0) * 100);
+    const batteryPercent =Math.round((highLevelStatus.BatteryPercent ?? 0) * 100);
 
     const isMowing = highLevelStatus.StateName === "MOWING" || highLevelStatus.StateName === "DOCKING" || highLevelStatus.StateName === "UNDOCKING";
     const isEmergency = !!highLevelStatus.Emergency;
@@ -143,6 +144,12 @@ export const MowerStatus = () => {
                     </Typography.Text>
                 )}
                 <Space size={4}>
+                    <Battery batteryPercent={batteryPercent} size={16} style={{color: batteryPercent > 50 ? colors.primary : (batteryPercent > 20 ? colors.warning : colors.danger)}}/>
+                    <Typography.Text style={{fontSize: 12, color: colors.text}}>
+                        {batteryPercent}%
+                    </Typography.Text>
+                </Space>
+                <Space size={4}>
                     <WifiOutlined style={{color: gpsPercent > 0 ? colors.primary : colors.danger, fontSize: 13}}/>
                     <Typography.Text style={{fontSize: 12, color: colors.text}}>
                         {gpsPercent}%
@@ -154,9 +161,6 @@ export const MowerStatus = () => {
                             color: highLevelStatus.IsCharging ? colors.primary : colors.muted,
                             fontSize: 13,
                         }}/>
-                        <Typography.Text style={{fontSize: 12, color: colors.text}}>
-                            {batteryPercent}%
-                        </Typography.Text>
                     </Space>
                 </Dropdown>
             </Space>
