@@ -1,5 +1,5 @@
 import {Col, Row, Statistic} from "antd";
-import {batteryFormatter, booleanFormatter, booleanFormatterInverted,  stateRenderer} from "./utils.tsx";
+import {batteryFormatter, booleanFormatter, booleanFormatterInverted, stateRenderer} from "./utils.tsx";
 import {useHighLevelStatus} from "../hooks/useHighLevelStatus.ts";
 import {usePower} from "../hooks/usePower.ts";
 import {useSettings} from "../hooks/useSettings.ts";
