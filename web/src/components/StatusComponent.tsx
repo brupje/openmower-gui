@@ -71,11 +71,11 @@ export function StatusComponent({compact}: {compact?: boolean}) {
                     </Space>
                     <Row gutter={[12, 8]}>
                         <Col span={8}>
-                            <Statistic title="Battery" value={power.VBattery} precision={1} suffix="V"
+                            <Statistic title="Battery" value={power.BatteryVoltageAdc} precision={1} suffix="V"
                                        valueStyle={{fontSize: 16}}/>
                         </Col>
                         <Col span={8}>
-                            <Statistic title="Charge" value={power.VCharge} precision={1} suffix="V"
+                            <Statistic title="Charge" value={power.ChargeVoltageAdc} precision={1} suffix="V"
                                        valueStyle={{fontSize: 16}}/>
                         </Col>
                         <Col span={8}>
@@ -130,10 +130,10 @@ export function StatusComponent({compact}: {compact?: boolean}) {
             <Card title={<Space><ThunderboltOutlined/> Power</Space>} size="small">
                 <Row gutter={[16, 16]}>
                     <Col span={8}>
-                        <Statistic title="Battery" value={power.VBattery} precision={2} suffix="V"/>
+                        <Statistic title="Battery" value={power.BatteryVoltageAdc} precision={2} suffix="V"/>
                     </Col>
                     <Col span={8}>
-                        <Statistic title="Charge" value={power.VCharge} precision={2} suffix="V"/>
+                        <Statistic title="Charge" value={power.ChargeVoltageAdc} precision={2} suffix="V"/>
                     </Col>
                     <Col span={8}>
                         <Statistic title="Current" value={power.ChargeCurrent} precision={2} suffix="A"/>
@@ -144,8 +144,8 @@ export function StatusComponent({compact}: {compact?: boolean}) {
                                active={!!power.ChargerEnabled}/>
                     <StatusTag label={status.IsCharging ? "Charging" : "Not Charging"}
                                active={!!status.IsCharging} color="cyan"/>
-                    {power.ChargerStatus ?
-                        <Tag>{power.ChargerStatus}</Tag> : null}
+                    {power.ChargerEnabled ?
+                        <Tag>{power.ChargerEnabled}</Tag> : null}
                 </Flex>
             </Card>
         </Col>

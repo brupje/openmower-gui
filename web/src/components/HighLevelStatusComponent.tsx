@@ -11,7 +11,7 @@ export function HighLevelStatusComponent() {
     const power = usePower()
     const {settings} = useSettings()
     const estimateRemainingChargingTime = () => {
-        if (!power.VBattery || !power.ChargeCurrent || power.ChargeCurrent == 0) {
+        if (!power.BatteryVoltageAdc || !power.ChargeCurrent || power.ChargeCurrent == 0) {
             return "∞"
         }
         let capacity = (settings["OM_BATTERY_CAPACITY_MAH"] ?? "3000.0");
@@ -21,7 +21,7 @@ export function HighLevelStatusComponent() {
             return "∞"
         }
         const estimatedAmpsPerVolt = parseFloat(capacity) / (parseFloat(full) - parseFloat(empty))
-        let estimatedRemainingAmps = (parseFloat(full) - (power.VBattery ?? 0)) * estimatedAmpsPerVolt;
+        let estimatedRemainingAmps = (parseFloat(full) - (power.BatteryVoltageAdc ?? 0)) * estimatedAmpsPerVolt;
         if (estimatedRemainingAmps < 10) {
             return "∞"
         }

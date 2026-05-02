@@ -167,11 +167,22 @@ export type Status = {
 }
 
 export type Power = {
-    VCharge?: number
-    VBattery?: number
+    ChargeVoltageAdc?: number
+    ChargeVoltageChg?: number
     ChargeCurrent?: number
-    ChargerEnabled?: boolean
+    BatteryVoltageAdc?: number
+    BatteryVoltageChg?: number
+    BatteryVoltageBms?: number
+    BatteryCurrent?: number
+    BatteryPct?: number
+    BatterySoc?: number
+    BatteryTemp?: number
+    DcdcInputCurrent?: number
+    ChargerInputCurrent?: number
     ChargerStatus?: string
+    ChargerEnabled?: boolean
+    BmsStatus?: string
+    BmsExtraData?: string
 }
 
 export type Emergency = {
