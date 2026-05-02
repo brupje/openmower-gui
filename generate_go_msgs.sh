@@ -1,4 +1,28 @@
 #!/bin/bash
+
+# some checks before we start
+if [ -z "$GOPATH" ]; then
+    echo "Error: GOPATH is not set. Please ensure your Go environment is configured correctly."
+    exit 1
+fi
+
+if [ ! -f "$GOPATH/bin/msg-import" ]; then
+    echo "Error: $GOPATH/bin/msg-import is missing."
+    echo "Please install it using: go install github.com/bluenviron/goroslib/v2/cmd/msg-import@latest"
+    exit 1
+fi
+
+if [ ! -f "$GOPATH/bin/srv-import" ]; then
+    echo "Error: $GOPATH/bin/srv-import is missing."
+    echo "Please install it using: go install github.com/bluenviron/goroslib/v2/cmd/srv-import@latest"
+    exit 1
+fi
+
+if ! command -v git &> /dev/null; then
+    echo "Error: git is not installed. Please install git."
+    exit 1
+fi
+
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 # Clone the repository https://github.com/ClemensElflein/open_mower_ros in a temporary directory
 OM_DIR=/tmp/open_mower_ros
