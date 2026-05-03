@@ -12,26 +12,27 @@ export function HighLevelStatusComponent() {
     const {settings} = useSettings()
     const estimateRemainingChargingTime = () => {
         if (!power.BatteryVoltageAdc || !power.ChargeCurrent || power.ChargeCurrent == 0) {
-            return "∞"
+            return null
         }
         let capacity = (settings["OM_BATTERY_CAPACITY_MAH"] ?? "3000.0");
         let full = (settings["OM_BATTERY_FULL_VOLTAGE"] ?? "28.0");
         let empty = (settings["OM_BATTERY_EMPTY_VOLTAGE"] ?? "23.0");
         if (!capacity || !full || !empty) {
-            return "∞"
+            return null
         }
         const estimatedAmpsPerVolt = parseFloat(capacity) / (parseFloat(full) - parseFloat(empty))
         let estimatedRemainingAmps = (parseFloat(full) - (power.BatteryVoltageAdc ?? 0)) * estimatedAmpsPerVolt;
         if (estimatedRemainingAmps < 10) {
-            return "∞"
+            return null
         }
         let remaining = estimatedRemainingAmps / ((power.ChargeCurrent ?? 0) * 1000)
         if (remaining < 0) {
-            return "∞"
+            return null
         }
         return Date.now() + remaining * (1000 * 60 * 60)
     };
 
+    const charging_time = estimateRemainingChargingTime();
     const batteryPercent = highLevelStatus.BatteryPercent??0;
     return <Row gutter={[16, 16]}>
         <Col lg={6} xs={12}><Statistic title="State" valueStyle={{color: colors.primary}}
@@ -41,9 +42,9 @@ export function HighLevelStatusComponent() {
                                        suffix={"%"}/></Col>
         <Col lg={6} xs={12}><Statistic title="Battery" value={batteryPercent * 100}
                                        formatter={batteryFormatter}/></Col>
-        <Col lg={6} xs={12}>{highLevelStatus.IsCharging ?
-            <Statistic.Countdown title="Charge ETA" format={"HH:mm"}
-                                       value={estimateRemainingChargingTime()}/> :
+        <Col lg={6} xs={12}>{highLevelStatus.IsCharging  && charging_time ?
+            <Statistic.Timer title="Charge ETA" format={"HH:mm"} type="countdown"
+                                       value={charging_time}/> :
             <Statistic title="Charge ETA" value="--:--"/>}
         </Col>
         <Col lg={6} xs={12}><Statistic title="Charging" value={highLevelStatus.IsCharging ? "Yes" : "No"}
