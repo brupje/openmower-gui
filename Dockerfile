@@ -21,6 +21,7 @@ RUN mkdir -p /usr/local/bin &&    ln -s ~/.platformio/penv/bin/platformio /usr/l
 
 FROM deps
 COPY ./setup /app/setup
+COPY ./asserts /app/asserts
 COPY --from=build-web /web/dist /app/web
 COPY --from=build-go /app/openmower-gui /app/openmower-gui
 ENV WEB_DIR=/app/web
