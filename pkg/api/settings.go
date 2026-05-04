@@ -20,7 +20,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const defaultSchemaURL = "https://raw.githubusercontent.com/ClemensElflein/OpenMowerMeta/main/backend/src/main/resources/assets/open_mower.default.schema.json"
+const defaultSchemaURL = "https://raw.githubusercontent.com/ClemensElflein/open_mower_ros/refs/heads/main/config/mower_config.schema.json"
 
 func SettingsRoutes(r *gin.RouterGroup, dbProvider types.IDBProvider) {
 	GetSettings(r, dbProvider)
@@ -132,6 +132,7 @@ func coerceValue(value string, schemaType string) any {
 	return value
 }
 
+// getSchema retrieves the JSON schema from the upstream repository or a local fallback.
 func getSchema(dbProvider types.IDBProvider) (map[string]any, error) {
 	schemaCacheMu.RLock()
 	if schemaCache != nil && time.Since(schemaCacheTime) < schemaCacheTTL {
@@ -141,24 +142,42 @@ func getSchema(dbProvider types.IDBProvider) (map[string]any, error) {
 	}
 	schemaCacheMu.RUnlock()
 
-	schemaURL := defaultSchemaURL
-	if customURL, err := dbProvider.Get("system.mower.schemaURL"); err == nil && len(customURL) > 0 {
-		schemaURL = string(customURL)
+	var schema map[string]any
+	var err error
+
+	// Determine if we should attempt to download the latest schema
+	downloadSchema, _ := dbProvider.Get("system.mower.downloadSchema")
+	shouldDownload := string(downloadSchema) == "true"
+
+	if shouldDownload {
+		schemaURL := defaultSchemaURL
+		if customURL, dbErr := dbProvider.Get("system.mower.schemaURL"); dbErr == nil && len(customURL) > 0 {
+			schemaURL = string(customURL)
+		}
+
+		schema, err = fetchSchemaFromUpstream(schemaURL)
 	}
 
-	schema, err := fetchSchemaFromUpstream(schemaURL)
-	if err != nil {
+	// Fallback to local file if downloading is disabled or failed
+	if !shouldDownload || err != nil {
+		if err != nil {
+			log.Printf("Warning: Failed to fetch upstream schema, falling back to local file: %v", err)
+		}
+
 		localFile, localErr := os.ReadFile("asserts/mower_config.schema.json")
 		if localErr != nil {
-			return nil, fmt.Errorf("failed to fetch schema from upstream and no local fallback: %w", err)
+			log.Printf("Error: no schema available (download failed and local file not found)  %v", localErr)
+			return nil, fmt.Errorf("no schema available (download failed and local file not found): %w", localErr)
 		}
 		if jsonErr := json.Unmarshal(localFile, &schema); jsonErr != nil {
 			return nil, fmt.Errorf("invalid local schema JSON: %w", jsonErr)
 		}
 	}
 
+	// Apply Mowgli-specific overrides to the schema
 	schema = applyMowgliOverlay(schema)
 
+	// Cache the resulting schema
 	schemaCacheMu.Lock()
 	schemaCache = schema
 	schemaCacheTime = time.Now()

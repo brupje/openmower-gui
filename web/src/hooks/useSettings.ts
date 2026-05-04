@@ -80,6 +80,20 @@ export const SettingsDesc: Record<string, Setting> = {
         defaultValue: "/config/mower_config.sh",
         description: "Mower config file",
     },
+    "system.mower.downloadSchema": {
+        settingType: SettingType.Db,
+        section: "Mower",
+        type: SettingValueType.Boolean,
+        defaultValue: false,
+        description: "Download latest schema file",
+    },
+    "system.mower.schemaURL": {
+        settingType: SettingType.Db,
+        section: "Mower",
+        type: SettingValueType.String,
+        defaultValue: "https://raw.githubusercontent.com/ClemensElflein/open_mower_ros/refs/heads/main/config/mower_config.schema.json",
+        description: "Mower settings schema",
+    },
     "system.mqtt.enabled": {
         settingType: SettingType.Db,
         section: "GUI MQTT",
