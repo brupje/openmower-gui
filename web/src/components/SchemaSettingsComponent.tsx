@@ -23,15 +23,31 @@ const humanizeKey = (key: string): string => {
 
 const SchemaField: React.FC<FieldRenderProps> = ({ name, prop, value, onChange }) => {
     const title = prop.title || humanizeKey(name);
-    const description = prop.description;
+    const description = prop.description; 
 
     if (prop.enum && prop.enum.length > 0) {
+        const remap = prop['x-remap-values'];
+        
+        const options = prop.enum.map((e: any) => ({
+            label: String(e),
+            value: remap ? remap[e] : e
+        }));
+
+        let displayValue = value;
+        if (remap) {
+            const foundKey = Object.keys(remap).find((key) => { return remap[key] == (value?? prop.default)});
+            
+            displayValue = foundKey ;
+        } else  {
+            displayValue = value ?? prop.default;
+        }
+        
         return (
             <Form.Item label={title} tooltip={description}>
                 <Select
-                    value={value ?? prop.default}
+                    value={displayValue}
                     onChange={(v) => onChange(name, v)}
-                    options={prop.enum.map((e: any) => ({ label: String(e), value: e }))}
+                    options={options}
                 />
             </Form.Item>
         );
