@@ -3,29 +3,22 @@
 package mower_msgs
 
 import (
-    "github.com/bluenviron/goroslib/v2/pkg/msg"
-    "time"
+	"time"
+
+	"github.com/bluenviron/goroslib/v2/pkg/msg"
 )
 
-
 type Power struct {
-    msg.Package `ros:"mower_msgs"`
-    Stamp time.Time
-    ChargeVoltageAdc float32
-    ChargeVoltageChg float32
-    ChargeCurrent float32
-    BatteryVoltageAdc float32
-    BatteryVoltageChg float32
-    BatteryVoltageBms float32
-    BatteryCurrent float32
-    BatteryPct float32
-    BatterySoc float32
-    BatteryTemp float32
-    DcdcInputCurrent float32
-    ChargerInputCurrent float32
-    ChargerStatus string
-    ChargerEnabled bool
-    BmsStatus string
-    BmsExtraData string
+	msg.Package         `ros:"mower_msgs"`
+	Stamp               time.Time
+	ChargeVoltage       float32
+	ChargeVoltageAdc    float32
+	ChargeCurrent       float32
+	BatteryVoltage      float32
+	BatteryVoltageAdc   float32
+	BatteryPct          float32
+	DcdcInputCurrent    float32
+	ChargerInputCurrent float32
+	ChargerEnabled      bool
+	ChargerStatus       string
 }
-
