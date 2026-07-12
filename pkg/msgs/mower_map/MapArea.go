@@ -3,15 +3,19 @@
 package mower_map
 
 import (
-    "github.com/bluenviron/goroslib/v2/pkg/msg"
-    "github.com/bluenviron/goroslib/v2/pkg/msgs/geometry_msgs"
+	"github.com/bluenviron/goroslib/v2/pkg/msg"
+	"github.com/bluenviron/goroslib/v2/pkg/msgs/geometry_msgs"
 )
 
-
 type MapArea struct {
-    msg.Package `ros:"mower_map"`
-    Name string
-    Area geometry_msgs.Polygon
-    Obstacles []geometry_msgs.Polygon
+	msg.Package         `ros:"mower_map"`
+	Id                  string                  `rosname:"id"`
+	Name                string                  `rosname:"name"`
+	Active              bool                    `rosname:"active"`
+	Area                geometry_msgs.Polygon   `rosname:"area"`
+	Obstacles           []geometry_msgs.Polygon `rosname:"obstacles"`
+	Angle               float64                 `rosname:"angle"`
+	OutlineCount        int32                   `rosname:"outline_count"`
+	OutlineOverlapCount int32                   `rosname:"outline_overlap_count"`
+	OutlineOffset       float64                 `rosname:"outline_offset"`
 }
-
