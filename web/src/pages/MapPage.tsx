@@ -587,7 +587,7 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
                         onMowArea={(key) => {
                             
                             return mowerAction("start_in_area", {
-                                area: features[key].properties.index,
+                                area: features[key] instanceof MowingAreaFeature ? features[key].getIndex() : 0,
                             })()
                         }}
                         stateName={highLevelStatus.highLevelStatus.StateName}
@@ -634,7 +634,7 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
                             onDownloadGeoJSON={handleDownloadGeoJSON}
                             onMowArea={(key) => {
                                 return mowerAction("start_in_area", {
-                                    area: features[key].properties.index,
+                                    area:  features[key] instanceof MowingAreaFeature ? features[key].getIndex() : 0
                                 })()
                             }}
                             {...mowerActions}
