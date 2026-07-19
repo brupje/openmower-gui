@@ -97,8 +97,14 @@ export type MapArea = {
     Obstacles []geometry_msgs.Polygon
      */
     Name?: string
+    Active?: boolean
     Area?: Polygon
     Obstacles?: Polygon[]
+    Angle?: number;
+    OutlineCount?: number;
+    OutlineOverlapCount?: number;
+    OutlineOffset?: number;
+
 }
 
 export type Map = {

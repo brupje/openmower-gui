@@ -51,6 +51,7 @@ export function useMapStreams({
         type: "FeatureCollection",
         features: [],
     });
+    const [mowerPose, setMowerPose] = useState<{ mower: MowerFeatureBase; heading: LineFeatureBase } | null>(null);
 
     const highLevelStatus = useHighLevelStatus();
 
@@ -75,8 +76,8 @@ export function useMapStreams({
                 y: pose.Pose?.Pose?.Position?.Y ?? 0,
                 heading: pose.MotionHeading ?? 0,
             };
-            setFeatures((oldFeatures) => {
-                const orientation = pose.MotionHeading!!;
+
+            const orientation = pose.MotionHeading!!;
                 const line = drawLine(
                     offsetX,
                     offsetY,
@@ -85,17 +86,12 @@ export function useMapStreams({
                     pose.Pose?.Pose?.Position?.X!!,
                     orientation
                 );
-                return {
-                    ...oldFeatures,
-                    mower: new MowerFeatureBase(mower_lonlat),
-                    ["mower-heading"]: new LineFeatureBase(
-                        "mower-heading",
-                        [mower_lonlat, line],
-                        "#ff0000",
-                        "heading"
-                    ),
-                };
+
+            setMowerPose({
+                mower: new MowerFeatureBase(mower_lonlat),
+                heading: new LineFeatureBase("mower-heading", [mower_lonlat, line], "#ff0000", "heading")
             });
+            
         }
     );
 
@@ -320,5 +316,6 @@ export function useMapStreams({
         lidarCollection,
         highLevelStatus,
         joyStream,
+        mowerPose
     };
 }

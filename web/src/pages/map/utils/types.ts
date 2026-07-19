@@ -1,21 +1,16 @@
-export class MowingAreaEdit {
-    id?: string;
-    name: string;
-    mowing_order: number;
-    orig_mowing_order: number;
-    feature_type: string;
-    orig_feature_type: string;
-    index: number;
+export type FeatureTypeWorkArea = 'workarea';
+export type FeatureTypeNavigation = 'navigation';
+export type FeatureTypeObstacle = 'obstacle';
+export type FeatureTypeDock = 'dock';
+export type FeatureTypeAreas = FeatureTypeWorkArea | FeatureTypeNavigation | FeatureTypeObstacle;
+export const FEATURE_TYPE_AREAS = ['workarea', 'navigation', 'obstacle'] as const;
+export type FeatureTypes = FeatureTypeAreas | FeatureTypeDock;
 
-    constructor() {
-        this.name = '';
-        this.mowing_order = 9999;
-        this.orig_mowing_order = 9999;
-        this.feature_type = 'workarea';
-        this.orig_feature_type = 'workarea';
-        this.index = -1;
-    }
-}
+export const isFeatureTypeArea = (type: string): type is FeatureTypeAreas => {
+    return FEATURE_TYPE_AREAS.includes(type as FeatureTypeAreas);
+};
+
+
 
 export interface AreaListItem {
     id: string;

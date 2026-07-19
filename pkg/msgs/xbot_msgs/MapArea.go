@@ -8,8 +8,13 @@ import (
 )
 
 type MapArea struct {
-	msg.Package `ros:"xbot_msgs"`
-	Name        string
-	Area        geometry_msgs.Polygon
-	Obstacles   []geometry_msgs.Polygon
+	msg.Package         `ros:"xbot_msgs"`
+	Name                string
+	Active              bool
+	Angle               float64
+	OutlineCount        int32
+	OutlineOverlapCount int32
+	OutlineOffset       float64
+	Area                geometry_msgs.Polygon
+	Obstacles           []geometry_msgs.Polygon
 }

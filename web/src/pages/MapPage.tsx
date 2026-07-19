@@ -7,7 +7,6 @@ import {MapArea, Marker} from "../types/ros.ts";
 import DrawControl from "../components/DrawControl.tsx";
 import Map, {Layer, Source} from 'react-map-gl/mapbox';
 import type {Map as MapboxMap} from 'mapbox-gl';
-import type {Feature} from 'geojson';
 import {FeatureCollection, Position} from "geojson";
 import {useMowerAction} from "../components/MowerActions.tsx";
 import {MapStyle} from "./MapStyle.tsx";
@@ -16,7 +15,7 @@ import {useSettings} from "../hooks/useSettings.ts";
 import {useConfig} from "../hooks/useConfig.tsx";
 import {useEnv} from "../hooks/useEnv.tsx";
 import {Spinner} from "../components/Spinner.tsx";
-import {MowingFeature, MowingAreaFeature, DockFeatureBase, MowingFeatureBase, NavigationFeature, ObstacleFeature, ActivePathFeature, PathFeature} from "../types/map.ts";
+import {MowingFeature, MowingAreaFeature, DockFeatureBase, MowingFeatureBase, NavigationFeature, ObstacleFeature, ActivePathFeature, PathFeature, MowerFeatureBase, LineFeatureBase} from "../types/map.ts";
 import {useMapEditHistory} from "./map/hooks/useMapEditHistory.ts";
 import {useMapOffset} from "./map/hooks/useMapOffset.ts";
 import {useManualMode} from "./map/hooks/useManualMode.ts";
@@ -33,6 +32,9 @@ import {MapEditorToolbar} from "./map/components/MapEditorToolbar.tsx";
 import {JoystickOverlay} from "./map/components/JoystickOverlay.tsx";
 import {useIsMobile} from "../hooks/useIsMobile.ts";
 import {useThemeMode} from "../theme/ThemeContext.tsx";
+import { isFeatureTypeArea} from "./map/utils/types.ts";
+
+
 
 
 export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
@@ -57,7 +59,10 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
     const robotPoseRef = useRef<{ x: number; y: number; heading: number } | null>(null)
     const mapInstanceRef = useRef<MapboxMap | null>(null)
     const drawRef = useRef<import('@mapbox/mapbox-gl-draw').default | null>(null);
-
+    
+    useEffect(() => {
+        console.debug('Features updated',features)
+    },[features]);
     // Only include editable polygon features for DrawControl — exclude mower,
     // paths, and other display-only features so that frequent pose updates don't
     // trigger DrawControl to deleteAll() + re-add, which wipes out selection state.
@@ -66,18 +71,6 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
         [features]
     );
 
-    // Display-only features (mower, dock, heading, paths) rendered as separate layers
-    const displayFeatures = useMemo<GeoJSON.FeatureCollection>(() => ({
-        type: "FeatureCollection",
-        features: Object.values(features)
-            .filter(f => !(f instanceof MowingFeatureBase))
-            .map(f => ({
-                type: "Feature" as const,
-                id: f.id,
-                geometry: f.geometry,
-                properties: f.properties,
-            })),
-    }), [features]);
 
     // Extracted hooks
     const {offsetX, offsetY, handleOffsetX, handleOffsetY} = useMapOffset({config, setConfig, notification});
@@ -96,9 +89,9 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
     }, [_datumLat, _datumLon])
 
     const mowingToolWidth = parseFloat(settings["OM_TOOL_WIDTH"] ?? "0.13") * 100;
-    const [mowingAreas, setMowingAreas] = useState<{ key: string, label: string, feat: Feature }[]>([])
+    //const [mowingAreas, setMowingAreas] = useState<{ key: string, label: string, feat: Feature }[]>([])
 
-    const {map, setMap, path, plan, lidarCollection, highLevelStatus, joyStream} = useMapStreams({
+    const {map, setMap, path, plan, lidarCollection, highLevelStatus, joyStream,mowerPose} = useMapStreams({
         editMap,
         settings,
         offsetX,
@@ -109,8 +102,40 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
         setEditMap,
         setMapKey,
         mapInstanceRef,
-        robotPoseRef,
+        robotPoseRef
     });
+
+
+    const displayFeatures = useMemo<GeoJSON.FeatureCollection>(() => {
+            
+        const baseFeatures = Object.values(features)
+            .filter(f => !(f instanceof MowingFeatureBase) && f.id !== 'mower' && f.id !== 'mower-heading')
+            .map(f => ({
+                type: "Feature" as const,
+                id: f.id,
+                geometry: f.geometry,
+                properties: f.properties,
+            }));
+        if (mowerPose) {
+            baseFeatures.push({
+                type: "Feature" as const,
+                id: "mower",
+                geometry: mowerPose.mower.geometry,
+                properties: mowerPose.mower.properties,
+            });
+            baseFeatures.push({
+                type: "Feature" as const,
+                id: "mower-heading",
+                geometry: mowerPose.heading.geometry,
+                properties: mowerPose.heading.properties,
+            });
+        }
+
+        return {
+            type: "FeatureCollection",
+            features: baseFeatures,
+        };
+    }, [features, mowerPose]);
 
     // Compute map bounds for the Mapbox viewport — depends on map data for centering
     const [map_ne, map_sw] = useMemo<[[number, number], [number, number]]>(() => {
@@ -131,24 +156,41 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
     } = useMapEditHistory({features, setFeatures, editMap, setEditMap});
 
     useEffect(() => {
+        
         if (envs) {
-            setTileUri(envs.tileUri)
+            if (envs.mapServerEnabled)
+                setTileUri(envs.tileUri)
+            
         }
     }, [envs]);
 
+    const areaKeysSerialized = Object.keys(features)
+    .filter((k) => k.startsWith("area-"))
+    .sort() // Zorg voor een vaste volgorde
+    .join(",");
+
+
+    const mowingAreas = useMemo(() => {
+    const workareas = Object.values(features).filter(
+        (f) => f instanceof MowingAreaFeature
+    );
+    
+    return workareas.map((f) => ({
+        key: f.id as string,
+        label: f.getFullLabel(),
+    }));
+    }, [areaKeysSerialized]);
     const {
         modalOpen,
         areaModelOpen,
-        newAreaName, setNewAreaName,
-        newAreaType, setNewAreaType,
-        curMowingAreaFeature, setCurMowingAreaFeature,
+        curMowingAreaFeature,
         selectedFeatureIds,
         buildLabels,
         onCreate, onUpdate, onCombine, onDelete, onSelectionChange, onOpenDetails,
         handleEditSelectedFeature, handleDrawPolygon, handleDrawShape, handleDrawEmoji,
         handleTrash, handleCombine,
         handleAreaSelect, handleSubtract, handleSplit,
-        handleSaveNewArea, updateMowingArea, cancelAreaModal, deleteFeature,
+        handleSaveNewArea, updateMowingArea, cancelNewAreaModal,cancelAreaModal, deleteFeature,
     } = useMapEditing({
         features,
         setFeatures,
@@ -160,6 +202,7 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
     });
     useEffect(() => {
         let newFeatures: Record<string, MowingFeature> = {}
+        
         if (map) {
             const workingAreas = buildFeatures(map.WorkingArea??[], "area")
             const navigationAreas = buildFeatures(map.NavigationAreas??[], "navigation")
@@ -204,16 +247,7 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
             type: "FeatureCollection",
             features: labels
         });
-        setMowingAreas(labels.flatMap(feat => {
-            if (feat.properties?.title == undefined) {
-                return []
-            }
-            return [{
-                key: feat.id as string,
-                label: feat.properties.title,
-                feat: feat
-            }]
-        }))
+
     }, [features]);
 
     // Build the areas list for the sidebar panel
@@ -231,19 +265,9 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
                 return (a.properties.mowing_order ?? 0) - (b.properties.mowing_order ?? 0);
             })
             .map((f) => {
-                const areaSqm = turfArea(f);
-                const areaLabel = areaSqm >= 10000
-                    ? `${(areaSqm / 10000).toFixed(2)} ha`
-                    : `${areaSqm.toFixed(0)} m²`;
+                const areaLabel = f.getSize();
                 const ftype = f.properties.feature_type;
-                let name = '';
-                if (f instanceof MowingAreaFeature) {
-                    name = f.getLabel();
-                } else if (f instanceof NavigationFeature) {
-                    name = `Navigation ${f.id}`;
-                } else if (f instanceof ObstacleFeature) {
-                    name = `Obstacle ${f.id}`;
-                }
+                let name = f.getLabel()
                 const mowingOrder = f instanceof MowingAreaFeature ? f.getMowingOrder() : undefined;
                 return { id: f.id, name, ftype, areaLabel, mowingOrder };
             });
@@ -280,6 +304,7 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
             nfeat.setArea(area, offsetX, offsetY, datum);
 
             let obstacles:  ObstacleFeature[] = [];
+            nfeat.setActive(true);
 
             if ((nfeat instanceof MowingAreaFeature) && (area.Obstacles))
                 obstacles = area.Obstacles.map((obstacle, oindex) => {
@@ -290,6 +315,7 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
                 
                 if (obstacle.Points)
                     nobst.transpose(obstacle.Points, offsetX, offsetY, datum);
+                
 
                 return nobst;
 
@@ -429,20 +455,18 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
         <div style={{height: isMobile ? 'calc(100% + 8px)' : 'calc(100% + 10px)', margin: isMobile ? '-8px -8px 0' : '-10px -24px 0', width: isMobile ? 'calc(100% + 16px)' : 'calc(100% + 48px)'}}>
             <NewAreaModal
                 open={modalOpen}
-                areaType={newAreaType}
-                areaName={newAreaName}
-                onAreaTypeChange={setNewAreaType}
-                onAreaNameChange={setNewAreaName}
                 onSave={handleSaveNewArea}
-                onCancel={deleteFeature}
+                onCancel={cancelNewAreaModal}
             />
+            {curMowingAreaFeature && isFeatureTypeArea(curMowingAreaFeature.properties.feature_type) &&
             <EditAreaModal
                 open={areaModelOpen}
-                area={curMowingAreaFeature}
-                onChange={setCurMowingAreaFeature}
+                area={curMowingAreaFeature.getArea()}
+                feature_type={curMowingAreaFeature.properties.feature_type}
                 onSave={updateMowingArea}
                 onCancel={cancelAreaModal}
             />
+}
 
             <div style={{height: '100%', position: 'relative'}}>
                 {map_sw?.length && map_ne?.length ? <Map key={mapKey}
@@ -560,9 +584,9 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
                         onDownloadGeoJSON={handleDownloadGeoJSON}
                         onUploadGeoJSON={handleUploadGeoJSON}
                         onMowArea={(key) => {
-                            const item = mowingAreas.find(item => item.key == key)
+                            
                             return mowerAction("start_in_area", {
-                                area: item?.feat?.properties?.index,
+                                area: features[key].properties.index,
                             })()
                         }}
                         stateName={highLevelStatus.highLevelStatus.StateName}
@@ -608,9 +632,8 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
                             onRestoreMap={handleRestoreMap}
                             onDownloadGeoJSON={handleDownloadGeoJSON}
                             onMowArea={(key) => {
-                                const item = mowingAreas.find(item => item.key == key)
                                 return mowerAction("start_in_area", {
-                                    area: item?.feat?.properties?.index,
+                                    area: features[key].properties.index,
                                 })()
                             }}
                             {...mowerActions}

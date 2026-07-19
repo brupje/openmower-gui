@@ -9,6 +9,8 @@
  * ---------------------------------------------------------------
  */
 
+import { MapArea } from "../types/ros";
+
 export interface ApiContainer {
   id?: string;
   labels?: Record<string, string>;
@@ -70,13 +72,13 @@ export interface GeometryMsgsQuaternion {
 }
 
 export interface MowerMapAddMowingAreaSrvReq {
-    area?: MowerMapMapArea;
+    area?: MapArea;
     isNavigationArea?: boolean;
     "msg.Package"?: number;
 }
 
 export interface MowerMapReplaceArea {
-  area?: MowerMapMapArea;
+  area?: MapArea;
   isNavigationArea?: boolean;
 }
 
@@ -86,12 +88,17 @@ export interface MowerReplaceMapSrvReq {
 }
 
 export interface MowerMapMapArea {
-    area?: GeometryMsgsPolygon;
+    id? :string;
+    area?: GeometryMsgsPolygon; 
+    active: boolean;
     "msg.Package"?: number;
     name?: string;
     obstacles?: GeometryMsgsPolygon[];
+    outline_count?: number;
+    outline_overlap_count?: number;
+    outline_offset?: number;
+    angle?: number;
 }
-
 export interface MowerMapSetDockingPointSrvReq {
     dockingPose?: GeometryMsgsPose;
     "msg.Package"?: number;

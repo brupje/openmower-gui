@@ -92,8 +92,18 @@ func ConfigEnvRoute(r *gin.RouterGroup, db types.IDBProvider) gin.IRoutes {
 			})
 			return
 		}
+
+		map_server_enabled, err := db.Get("system.map.enabled")
+		if err != nil {
+			context.JSON(500, ErrorResponse{
+				Error: err.Error(),
+			})
+			return
+		}
+
 		context.JSON(200, GetConfigResponse{
-			TileUri: string(tileUri),
+			TileUri:          string(tileUri),
+			MapServerEnabled: string(map_server_enabled) == "true",
 		})
 	})
 }

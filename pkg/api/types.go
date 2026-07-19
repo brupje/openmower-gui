@@ -12,7 +12,8 @@ type GetSettingsResponse struct {
 }
 
 type GetConfigResponse struct {
-	TileUri string `json:"tileUri"`
+	TileUri          string `json:"tileUri"`
+	MapServerEnabled bool   `json:"mapServerEnabled"`
 }
 
 type Container struct {

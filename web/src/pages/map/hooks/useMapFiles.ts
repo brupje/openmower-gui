@@ -1,7 +1,7 @@
-import React, {ChangeEvent} from "react";
-import type {NotificationInstance} from "antd/es/notification/interface";
-import type {FeatureCollection, Feature} from "geojson";
-import type {Map as MapType} from "../../../types/ros.ts";
+import React, { ChangeEvent } from "react";
+import type { NotificationInstance } from "antd/es/notification/interface";
+import type { FeatureCollection, Feature } from "geojson";
+import type { MapArea, Map as MapType } from "../../../types/ros.ts";
 import {
     MowingFeature,
     MowingAreaFeature,
@@ -10,8 +10,8 @@ import {
     DockFeatureBase,
     MowingFeatureBase,
 } from "../../../types/map.ts";
-import type {Api, MowerMapMapArea, MowerReplaceMapSrvReq} from "../../../api/Api.ts";
-import {dedupePoints, getQuaternionFromHeading, itranspose} from "../../../utils/map.tsx";
+import type { Api,  MowerMapMapArea,  MowerReplaceMapSrvReq } from "../../../api/Api.ts";
+import { dedupePoints, getQuaternionFromHeading, itranspose } from "../../../utils/map.tsx";
 
 interface UseMapFilesOptions {
     features: Record<string, MowingFeature>;
@@ -42,7 +42,7 @@ export function useMapFiles({
     guiApi,
 }: UseMapFilesOptions) {
     async function handleSaveMap() {
-        const areas: Record<string, MowerMapMapArea[]> = {
+        const areas: Record<string, MapArea[]> = {
             "area": [],
             "navigation": [],
         };
@@ -67,8 +67,8 @@ export function useMapFiles({
         });
 
         // Track per-type index counters and map feature ID → index in areas array
-        const typeCounters: Record<string, number> = {"area": 0, "navigation": 0};
-        const featureIndexMap: Record<string, {type: string; index: number}> = {};
+        const typeCounters: Record<string, number> = { "area": 0, "navigation": 0 };
+        const featureIndexMap: Record<string, { type: string; index: number }> = {};
 
         for (const f of areaFeatures) {
             const idDetails = f.id.split("-");
@@ -83,18 +83,11 @@ export function useMapFiles({
             }
 
             const index = typeCounters[type]++;
-            featureIndexMap[f.id] = {type, index};
+            featureIndexMap[f.id] = { type, index };
 
-            const rawPoints = f.geometry.coordinates[0].map((point) => {
-                const p = itranspose(offsetX, offsetY, datum, point[1], point[0]);
-                return {x: p[0], y: p[1], z: 0};
-            });
-            const points = dedupePoints(rawPoints);
+            
 
-            areas[type][index] = {
-                name: f.properties?.name ?? '',
-                area: {points},
-            };
+            areas[type][index] = f.getProperties(offsetX, offsetY, datum);
         }
 
         // Process obstacles and attach them to their parent area
@@ -108,12 +101,12 @@ export function useMapFiles({
 
             const rawPoints = f.geometry.coordinates[0].map((point) => {
                 const p = itranspose(offsetX, offsetY, datum, point[1], point[0]);
-                return {x: p[0], y: p[1], z: 0};
+                return { x: p[0], y: p[1], z: 0 };
             });
             const points = dedupePoints(rawPoints);
 
             const target = areas[parentMapping.type][parentMapping.index];
-            target.obstacles = [...(target.obstacles ?? []), {points}];
+            target.Obstacles = [...(target.Obstacles ?? []), { points }];
         }
 
         const updateMsg: MowerReplaceMapSrvReq = {
@@ -123,7 +116,7 @@ export function useMapFiles({
             for (const area of areasOfType) {
                 updateMsg.areas.push({
                     area,
-                    isNavigationArea: type === "navigation",
+                    isNavigationArea: type === "navigation"
                 });
             }
         }
@@ -183,7 +176,7 @@ export function useMapFiles({
         document.body.appendChild(a);
         a.style.display = "none";
         const json = JSON.stringify(map),
-            blob = new Blob([json], {type: "octet/stream"}),
+            blob = new Blob([json], { type: "octet/stream" }),
             url = window.URL.createObjectURL(blob);
         a.href = url;
         a.download = "map.json";
@@ -207,6 +200,7 @@ export function useMapFiles({
                 const content = event.target?.result as string;
                 const parts = content.split(",");
                 const newMap = JSON.parse(atob(parts[1])) as MapType;
+                
                 setMap(newMap);
             });
             reader.readAsDataURL(file);
@@ -223,7 +217,7 @@ export function useMapFiles({
         document.body.appendChild(a);
         a.style.display = "none";
         const json = JSON.stringify(geojson),
-            blob = new Blob([json], {type: "application/geo+json"}),
+            blob = new Blob([json], { type: "application/geo+json" }),
             url = window.URL.createObjectURL(blob);
         a.href = url;
         a.download = "map.geojson";
@@ -275,7 +269,7 @@ export function useMapFiles({
                                 notification.error({
                                     message: `Unknown type ${areaType}`,
                                 });
-                                setFeatures({...features}); // revert
+                                setFeatures({ ...features }); // revert
                                 return;
                         }
                     } else {
@@ -287,7 +281,7 @@ export function useMapFiles({
                                 notification.error({
                                     message: `Unknown type ${areaType}`,
                                 });
-                                setFeatures({...features}); // revert
+                                setFeatures({ ...features }); // revert
                                 return;
                         }
                     }

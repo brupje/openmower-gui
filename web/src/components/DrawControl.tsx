@@ -30,7 +30,6 @@ export default function DrawControl(props: DrawControlProps) {
     const rawMapRef = useRef<ReturnType<MapRef['getMap']> | null>(null);
     const editModeRef = useRef(editMode);
     editModeRef.current = editMode;
-
     // Use refs for all callbacks so event listeners always call the latest version.
     // useControl only binds listeners once during setup — without refs, stale closures
     // would be called when the callbacks change (e.g. when splitTargetId updates).

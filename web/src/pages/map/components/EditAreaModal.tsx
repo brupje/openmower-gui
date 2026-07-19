@@ -1,60 +1,68 @@
-import {Form, Input, InputNumber, Modal, Select} from "antd";
-import {MowingAreaEdit} from "../utils/types.ts";
+import { Form, Input, Modal, Switch } from "antd";
+
+import { WorkAreaFields } from "./WorkAreaField.tsx";
+import { MapArea } from "../../../types/ros.ts";
+import { useEffect, useState } from "react";
+import { FeatureTypeAreas } from "../utils/types.ts";
 
 interface EditAreaModalProps {
     open: boolean;
-    area: MowingAreaEdit;
-    onChange: (area: MowingAreaEdit) => void;
-    onSave: () => void;
+    area: MapArea;
+    feature_type: FeatureTypeAreas;
+    onSave: (area: MapArea) => void;
     onCancel: () => void;
 }
 
-const AREA_TYPE_OPTIONS = [
-    {value: 'workarea', label: 'Mowing Area'},
-    {value: 'navigation', label: 'Navigation Area'},
-    {value: 'obstacle', label: 'Obstacle'},
-];
+export const EditAreaModal = ({
+    open,
+    feature_type,
+    area,
+    onSave,
+    onCancel,
+}: EditAreaModalProps) => {
+    const [editarea, setArea] = useState<MapArea>(area);
 
-export const EditAreaModal = ({open, area, onChange, onSave, onCancel}: EditAreaModalProps) => (
-    <Modal
-        open={open}
-        title={area.name ? `Edit "${area.name}"` : "Edit area"}
-        okText="Save"
-        cancelText="Cancel"
-        onOk={onSave}
-        onCancel={onCancel}
-        destroyOnClose
-    >
-        <Form layout="vertical" style={{marginTop: 16}}>
-            <Form.Item label="Area type">
-                <Select
-                    value={area.feature_type}
-                    onChange={(v) => onChange({...area, feature_type: v})}
-                    options={AREA_TYPE_OPTIONS}
-                />
-            </Form.Item>
-            {area.feature_type === 'workarea' && (
-                <Form.Item label="Area name">
+    useEffect(() => {
+        if (open) {
+            if (console.debug)
+                console.debug("editing", editarea);
+            setArea(area);
+        }
+    }, [open]);
+
+    return (
+        <Modal
+            open={open}
+            title={editarea.Name ? `Edit2 "${editarea.Name}"` : "Edit area"}
+            okText="Save"
+            cancelText="Cancel"
+            onOk={() => {
+                onSave(editarea);
+            }}
+            onCancel={onCancel}
+            destroyOnHidden
+        >
+            <Form layout="vertical" style={{ marginTop: 16 }}>
+                <Form.Item label="Area name (optional)">
                     <Input
-                        key="areaname"
                         placeholder="e.g. Front lawn"
-                        value={area.name}
-                        onChange={(e) => onChange({...area, name: e.target.value})}
+                        value={editarea?.Name}
+                        onChange={(e) =>
+                            setArea({ ...editarea, Name: e.target.value })
+                        }
                         autoFocus
                     />
                 </Form.Item>
-            )}
-            {area.feature_type === 'workarea' && (
-                <Form.Item label="Mowing order">
-                    <InputNumber
-                        key="mowingorder"
-                        min={1}
-                        value={area.mowing_order}
-                        onChange={(v) => onChange({...area, mowing_order: v ?? 9999})}
-                        style={{width: '100%'}}
-                    />
+                
+                <Form.Item label="Active">
+                    <Switch value={editarea?.Active??true} onChange={(v) => setArea({ ...editarea, Active: v })} />
                 </Form.Item>
-            )}
-        </Form>
-    </Modal>
-);
+                {feature_type === "workarea" && (
+                    <>
+                        <WorkAreaFields area={editarea} setArea={setArea} />
+                    </>
+                )}
+            </Form>
+        </Modal>
+    );
+};

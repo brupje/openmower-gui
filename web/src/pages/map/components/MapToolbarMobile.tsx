@@ -50,7 +50,7 @@ interface MapToolbarMobileProps {
     useSatellite: boolean;
     historyIndex: number;
     editHistoryLength: number;
-    mowingAreas: MowingAreaItem[];
+    mowingAreas: MenuItemType[];
     onEditMap: () => void;
     onSaveMap: () => Promise<void>;
     onUndo: () => void;

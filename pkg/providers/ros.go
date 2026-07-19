@@ -3,6 +3,10 @@ package providers
 import (
 	"context"
 	"encoding/json"
+	"math"
+	"sync"
+	"time"
+
 	"github.com/bluenviron/goroslib/v2"
 	"github.com/bluenviron/goroslib/v2/pkg/msgs/geometry_msgs"
 	"github.com/bluenviron/goroslib/v2/pkg/msgs/nav_msgs"
@@ -11,15 +15,12 @@ import (
 	"github.com/cedbossneo/openmower-gui/pkg/msgs/mower_msgs"
 	"github.com/cedbossneo/openmower-gui/pkg/msgs/std_msgs"
 	"github.com/cedbossneo/openmower-gui/pkg/msgs/xbot_msgs"
-	"math"
 	types2 "github.com/cedbossneo/openmower-gui/pkg/types"
 	"github.com/paulmach/orb"
 	"github.com/paulmach/orb/simplify"
 	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/xerrors"
-	"sync"
-	"time"
 )
 
 type RosSubscriber struct {
@@ -530,16 +531,59 @@ type jsonMapArea struct {
 
 // jsonDockingStation represents a docking station in the JSON map format
 type jsonDockingStation struct {
-	ID         string            `json:"id"`
+	ID         string                 `json:"id"`
 	Properties map[string]interface{} `json:"properties"`
-	Position   jsonMapPoint      `json:"position"`
-	Heading    float64           `json:"heading"`
+	Position   jsonMapPoint           `json:"position"`
+	Heading    float64                `json:"heading"`
 }
 
 // jsonMapData represents the full JSON map from mower_map_service
 type jsonMapData struct {
 	Areas           []jsonMapArea        `json:"areas"`
 	DockingStations []jsonDockingStation `json:"docking_stations"`
+}
+
+func getBoolProp(props map[string]interface{}, key string, defaultVal bool) bool {
+	if val, ok := props[key]; ok {
+		if b, ok := val.(bool); ok {
+			return b
+		}
+	}
+	return defaultVal
+}
+
+func getFloatProp(props map[string]interface{}, key string, defaultVal float64) float64 {
+	if val, ok := props[key]; ok {
+		if f, ok := val.(float64); ok {
+			return f
+		}
+	}
+	return defaultVal
+}
+
+func getStringProp(props map[string]interface{}, key string, defaultVal string) string {
+	if val, ok := props[key]; ok {
+		if f, ok := val.(string); ok {
+			return f
+		}
+	}
+	return defaultVal
+}
+
+func getInt32Prop(props map[string]interface{}, key string, defaultVal int32) int32 {
+	if val, ok := props[key]; ok {
+		// JSON numbers worden vaak als float64 geparsed in Go
+		if f, ok := val.(float64); ok {
+			return int32(f)
+		}
+		if i, ok := val.(int); ok {
+			return int32(i)
+		}
+		if i32, ok := val.(int32); ok {
+			return i32
+		}
+	}
+	return defaultVal
 }
 
 func (p *RosProvider) jsonMapHandler(msg *std_msgs.String) {
@@ -574,8 +618,7 @@ func (p *RosProvider) jsonMapHandler(msg *std_msgs.String) {
 			return poly
 		}
 
-		switch areaType {
-		case "obstacle":
+		if areaType == "obstacle" {
 			// Attach to the last mowing area
 			if lastMowIndex >= 0 && lastMowIndex < len(result.WorkingArea) {
 				result.WorkingArea[lastMowIndex].Obstacles = append(
@@ -583,29 +626,40 @@ func (p *RosProvider) jsonMapHandler(msg *std_msgs.String) {
 					outlineToPolygon(area.Outline),
 				)
 			}
-		case "nav":
+		} else {
 			var mapArea xbot_msgs.MapArea
-			if name, ok := area.Properties["name"].(string); ok {
-				mapArea.Name = name
-			}
+
+			mapArea.Name = getStringProp(area.Properties, "name", "")
+			mapArea.Active = getBoolProp(area.Properties, "active", true)
 			mapArea.Area = outlineToPolygon(area.Outline)
-			result.NavigationAreas = append(result.NavigationAreas, mapArea)
-		default: // "mow" or any other type treated as mowing area
-			var mapArea xbot_msgs.MapArea
-			if name, ok := area.Properties["name"].(string); ok {
-				mapArea.Name = name
+
+			if areaType == "mow" {
+				mapArea.Angle = getFloatProp(area.Properties, "angle", -1)
+				mapArea.OutlineCount = getInt32Prop(area.Properties, "outline_count", -1)
+				mapArea.OutlineOverlapCount = getInt32Prop(area.Properties, "outline_overlap_count", -1)
+				mapArea.OutlineOffset = getFloatProp(area.Properties, "outline_offset", -1)
+
+				result.WorkingArea = append(result.WorkingArea, mapArea)
+				lastMowIndex = len(result.WorkingArea) - 1
+			} else {
+				result.NavigationAreas = append(result.NavigationAreas, mapArea)
 			}
-			mapArea.Area = outlineToPolygon(area.Outline)
-			result.WorkingArea = append(result.WorkingArea, mapArea)
-			lastMowIndex = len(result.WorkingArea) - 1
 		}
 
 		// Update bounds from all area types
 		for _, pt := range area.Outline {
-			if pt.X < minX { minX = pt.X }
-			if pt.X > maxX { maxX = pt.X }
-			if pt.Y < minY { minY = pt.Y }
-			if pt.Y > maxY { maxY = pt.Y }
+			if pt.X < minX {
+				minX = pt.X
+			}
+			if pt.X > maxX {
+				maxX = pt.X
+			}
+			if pt.Y < minY {
+				minY = pt.Y
+			}
+			if pt.Y > maxY {
+				maxY = pt.Y
+			}
 		}
 	}
 
