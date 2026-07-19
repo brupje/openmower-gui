@@ -185,7 +185,7 @@ export class MowingFeatureBase
             OutlineOverlapCount: this.properties.outline_overlap_count??-1,
             OutlineOffset: this.properties.outline_offset??-1,
             Angle: this.properties.angle??-1,
-            Area: { points  }
+            Area: { Points: points as Point32[]}
         }
     }
 

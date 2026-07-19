@@ -1,7 +1,6 @@
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import {useApi} from "../hooks/useApi.ts";
 import {App} from "antd";
-import turfArea from "@turf/area";
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {MapArea, Marker} from "../types/ros.ts";
 import DrawControl from "../components/DrawControl.tsx";
@@ -15,7 +14,7 @@ import {useSettings} from "../hooks/useSettings.ts";
 import {useConfig} from "../hooks/useConfig.tsx";
 import {useEnv} from "../hooks/useEnv.tsx";
 import {Spinner} from "../components/Spinner.tsx";
-import {MowingFeature, MowingAreaFeature, DockFeatureBase, MowingFeatureBase, NavigationFeature, ObstacleFeature, ActivePathFeature, PathFeature, MowerFeatureBase, LineFeatureBase} from "../types/map.ts";
+import {MowingFeature, MowingAreaFeature, DockFeatureBase, MowingFeatureBase, NavigationFeature, ObstacleFeature, ActivePathFeature, PathFeature} from "../types/map.ts";
 import {useMapEditHistory} from "./map/hooks/useMapEditHistory.ts";
 import {useMapOffset} from "./map/hooks/useMapOffset.ts";
 import {useManualMode} from "./map/hooks/useManualMode.ts";
@@ -190,7 +189,7 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
         handleEditSelectedFeature, handleDrawPolygon, handleDrawShape, handleDrawEmoji,
         handleTrash, handleCombine,
         handleAreaSelect, handleSubtract, handleSplit,
-        handleSaveNewArea, updateMowingArea, cancelNewAreaModal,cancelAreaModal, deleteFeature,
+        handleSaveNewArea, updateMowingArea, cancelNewAreaModal,cancelAreaModal,
     } = useMapEditing({
         features,
         setFeatures,
@@ -285,6 +284,8 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
                     f instanceof MowingAreaFeature && f.getMowingOrder() === swapOrder
             );
             if (!swapFeat) return curr;
+            console.log("target",target)
+            console.log("swapFeat",swapFeat)
             target.setMowingOrder(swapOrder);
             swapFeat.setMowingOrder(targetOrder);
             return next;

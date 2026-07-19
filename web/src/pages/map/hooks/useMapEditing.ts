@@ -14,7 +14,6 @@ import {
     MowingFeatureBase,
     NavigationFeature,
     ObstacleFeature,
-    MapAreaFeature,
 } from "../../../types/map.ts";
 import { MapArea } from "../../../types/ros.ts";
 import { FeatureTypeAreas, isFeatureTypeArea } from "../utils/types.ts";
@@ -147,7 +146,6 @@ export function getNewId(
  */
 export function sortFeatures(
     tosort: Record<string, MowingFeature>,
-    curMowingAreaFeature?: MapAreaFeature,
 ): void {
     const idxorder = Object.values(tosort).sort(
         (a: MowingFeature, b: MowingFeature) => {

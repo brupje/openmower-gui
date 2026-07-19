@@ -25,17 +25,17 @@ describe('NewAreaModal', () => {
     });
 
     it('shows name input for workarea type', () => {
-        render(<NewAreaModal {...defaultProps} areaType="workarea" />);
+        render(<NewAreaModal {...defaultProps} />);
         expect(screen.getByPlaceholderText('e.g. Front lawn')).toBeInTheDocument();
     });
 
     it('hides name input for navigation type', () => {
-        render(<NewAreaModal {...defaultProps} areaType="navigation" />);
+        render(<NewAreaModal {...defaultProps}  />);
         expect(screen.queryByPlaceholderText('e.g. Front lawn')).not.toBeInTheDocument();
     });
 
     it('hides name input for obstacle type', () => {
-        render(<NewAreaModal {...defaultProps} areaType="obstacle" />);
+        render(<NewAreaModal {...defaultProps}  />);
         expect(screen.queryByPlaceholderText('e.g. Front lawn')).not.toBeInTheDocument();
     });
 

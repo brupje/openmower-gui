@@ -1,7 +1,7 @@
 import React, { ChangeEvent } from "react";
 import type { NotificationInstance } from "antd/es/notification/interface";
 import type { FeatureCollection, Feature } from "geojson";
-import type { MapArea, Map as MapType } from "../../../types/ros.ts";
+import type { MapArea, Map as MapType, Point32 } from "../../../types/ros.ts";
 import {
     MowingFeature,
     MowingAreaFeature,
@@ -10,7 +10,7 @@ import {
     DockFeatureBase,
     MowingFeatureBase,
 } from "../../../types/map.ts";
-import type { Api,  MowerMapMapArea,  MowerReplaceMapSrvReq } from "../../../api/Api.ts";
+import type { Api,   MowerReplaceMapSrvReq } from "../../../api/Api.ts";
 import { dedupePoints, getQuaternionFromHeading, itranspose } from "../../../utils/map.tsx";
 
 interface UseMapFilesOptions {
@@ -106,7 +106,7 @@ export function useMapFiles({
             const points = dedupePoints(rawPoints);
 
             const target = areas[parentMapping.type][parentMapping.index];
-            target.Obstacles = [...(target.Obstacles ?? []), { points }];
+            target.Obstacles = [...(target.Obstacles ?? []), { Points: points as Point32[]}];
         }
 
         const updateMsg: MowerReplaceMapSrvReq = {

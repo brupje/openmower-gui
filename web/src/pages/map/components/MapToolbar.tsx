@@ -22,11 +22,7 @@ import {
 import type {MenuInfo} from "rc-menu/lib/interface";
 import AsyncButton from "../../../components/AsyncButton.tsx";
 import AsyncDropDownButton from "../../../components/AsyncDropDownButton.tsx";
-import type {Feature} from "geojson";
 
-interface MowingAreaItem extends MenuItemType {
-    feat: Feature;
-}
 
 interface MapToolbarProps {
     manualMode: number | undefined;

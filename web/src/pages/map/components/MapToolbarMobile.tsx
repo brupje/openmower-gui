@@ -34,14 +34,9 @@ import {
 } from "@ant-design/icons";
 import type {MenuInfo} from "rc-menu/lib/interface";
 import AsyncButton from "../../../components/AsyncButton.tsx";
-import type {Feature} from "geojson";
 import type {MenuItemType} from "antd/es/menu/interface";
 import {ShapePickerDropdown} from "./ShapePickerDropdown.tsx";
 import type {ShapeType} from "../hooks/useMapEditing.ts";
-
-interface MowingAreaItem extends MenuItemType {
-    feat: Feature;
-}
 
 interface MapToolbarMobileProps {
     editMap: boolean;

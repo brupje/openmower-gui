@@ -2,17 +2,16 @@ import {describe, it, expect, vi} from 'vitest';
 import {render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {EditAreaModal} from './EditAreaModal.tsx';
-import {MowingAreaEdit} from '../utils/types.ts';
+import {FeatureTypeWorkArea} from '../utils/types.ts';
+import { MapArea } from '../../../types/ros.ts';
 
 describe('EditAreaModal', () => {
-    const area = new MowingAreaEdit();
-    area.name = 'Garden';
-    area.mowing_order = 2;
-    area.feature_type = 'workarea';
-    area.orig_feature_type = 'workarea';
+    const area = {} as MapArea;
+    area.Name = 'Garden';
 
     const defaultProps = {
         open: true,
+        feature_type: 'workarea' as FeatureTypeWorkArea,
         area,
         onChange: vi.fn(),
         onSave: vi.fn(),
@@ -25,7 +24,7 @@ describe('EditAreaModal', () => {
     });
 
     it('shows generic title when no name', () => {
-        const noNameArea = new MowingAreaEdit();
+        const noNameArea = {} as MapArea;
         render(<EditAreaModal {...defaultProps} area={noNameArea} />);
         expect(screen.getByText('Edit area')).toBeInTheDocument();
     });
@@ -46,17 +45,15 @@ describe('EditAreaModal', () => {
     });
 
     it('hides name and mowing order for navigation type', () => {
-        const navArea = new MowingAreaEdit();
-        navArea.feature_type = 'navigation';
-        render(<EditAreaModal {...defaultProps} area={navArea} />);
+        const navArea = {} as MapArea;
+        render(<EditAreaModal {...defaultProps} feature_type={'navigation'} area={navArea} />);
         expect(screen.queryByDisplayValue('Garden')).not.toBeInTheDocument();
         expect(screen.queryByText('Mowing order')).not.toBeInTheDocument();
     });
 
     it('hides name and mowing order for obstacle type', () => {
-        const obstArea = new MowingAreaEdit();
-        obstArea.feature_type = 'obstacle';
-        render(<EditAreaModal {...defaultProps} area={obstArea} />);
+        const obstArea = {} as MapArea;
+        render(<EditAreaModal {...defaultProps} feature_type='obstacle' area={obstArea} />);
         expect(screen.queryByText('Area name')).not.toBeInTheDocument();
         expect(screen.queryByText('Mowing order')).not.toBeInTheDocument();
     });
@@ -85,7 +82,7 @@ describe('EditAreaModal', () => {
     it('calls onChange when name is edited', async () => {
         const onChange = vi.fn();
         const user = userEvent.setup();
-        render(<EditAreaModal {...defaultProps} onChange={onChange} />);
+        render(<EditAreaModal {...defaultProps} />);
         const input = screen.getByDisplayValue('Garden');
         await user.clear(input);
         await user.type(input, 'Back Yard');
