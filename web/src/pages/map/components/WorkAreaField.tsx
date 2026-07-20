@@ -40,7 +40,7 @@ export const WorkAreaFields = ({
                     autoFocus
                 />
             </Form.Item>
-            <Form.Item label="Outline Offset (empty is global)">
+            <Form.Item label="Outline Offset">
                 <Input
                     key="outlineoffset"
                     step={0.01}
@@ -50,7 +50,7 @@ export const WorkAreaFields = ({
                     onChange={(e) =>
                         setArea({
                             ...area,
-                            OutlineOffset: parseFloat(e.target.value),
+                            OutlineOffset: e.target.value===""?0: parseFloat(e.target.value),
                         })
                     }
                     autoFocus

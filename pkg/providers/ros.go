@@ -637,7 +637,7 @@ func (p *RosProvider) jsonMapHandler(msg *std_msgs.String) {
 				mapArea.Angle = getFloatProp(area.Properties, "angle", -1)
 				mapArea.OutlineCount = getInt32Prop(area.Properties, "outline_count", -1)
 				mapArea.OutlineOverlapCount = getInt32Prop(area.Properties, "outline_overlap_count", -1)
-				mapArea.OutlineOffset = getFloatProp(area.Properties, "outline_offset", -1)
+				mapArea.OutlineOffset = getFloatProp(area.Properties, "outline_offset", 0)
 
 				result.WorkingArea = append(result.WorkingArea, mapArea)
 				lastMowIndex = len(result.WorkingArea) - 1
