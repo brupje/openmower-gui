@@ -211,7 +211,6 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
             const dock_lonlat = transpose(offsetX, offsetY, datum, map?.DockY!!, map?.DockX!!)
             newFeatures["dock"] = new DockFeatureBase(dock_lonlat);
 
-            console.error(map.WorkingArea)
         }
         if (path) {
             Object.values<Marker>(path.Markers).filter((f) => {
@@ -305,7 +304,6 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
             nfeat.setArea(area, offsetX, offsetY, datum);
 
             let obstacles:  ObstacleFeature[] = [];
-            nfeat.setActive(true);
 
             if ((nfeat instanceof MowingAreaFeature) && (area.Obstacles))
                 obstacles = area.Obstacles.map((obstacle, oindex) => {

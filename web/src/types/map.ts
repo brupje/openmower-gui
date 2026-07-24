@@ -145,16 +145,18 @@ export class MowingFeatureBase
         this.geometry = { type: "Polygon", coordinates: [] } as Polygon;
     }
 
-    setActive(active: boolean) {
+    setActive(active: boolean) { 
         this.properties.active = active;
     }
 
-    setPropertiesFromArea(area: MapArea) {
+    setPropertiesFromArea(area: MapArea) {   
+
+       
         this.properties = {
             ...this.properties,
             active: area.Active ?? true,
             name: area.Name,
-        };
+        };  
     }
 
     getArea(): MapArea {
@@ -314,7 +316,7 @@ export class MowingAreaFeature extends MapAreaFeature {
         offsetX: number,
         offsetY: number,
         datum: [number, number, number],
-    ) {
+    ) {   
         this.setPropertiesFromArea(area);
         super.setArea(area, offsetX, offsetY, datum);
         this.setName(area.Name ?? "");

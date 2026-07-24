@@ -1088,6 +1088,7 @@ export function useMapEditing({
         (area: MapArea) => {
             if (!curMowingAreaFeature || !curMowingAreaFeature.id) return;
 
+   
             setAreaModelOpen(false);
             const newFeatures = { ...features } as Record<
                 string,
