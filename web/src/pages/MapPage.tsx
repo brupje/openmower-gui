@@ -211,7 +211,7 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
             const dock_lonlat = transpose(offsetX, offsetY, datum, map?.DockY!!, map?.DockX!!)
             newFeatures["dock"] = new DockFeatureBase(dock_lonlat);
 
-
+            console.error(map.WorkingArea)
         }
         if (path) {
             Object.values<Marker>(path.Markers).filter((f) => {

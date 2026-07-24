@@ -184,7 +184,7 @@ export class MowingFeatureBase
             OutlineCount: this.properties.outline_count??-1,
             OutlineOverlapCount: this.properties.outline_overlap_count??-1,
             OutlineOffset: this.properties.outline_offset,
-            Angle: this.properties.angle??-1,
+            Angle: this.properties.angle,
             Area: { Points: points as Point32[]}
         }
 
@@ -302,10 +302,10 @@ export class MowingAreaFeature extends MapAreaFeature {
         super.setPropertiesFromArea(area);
         this.properties = {
             ...this.properties,
-            outline_count: area.OutlineCount == -1? undefined: area.OutlineCount,
-            outline_overlap_count: area.OutlineOverlapCount  == -1? undefined: area.OutlineOverlapCount,
-            outline_offset: area.OutlineOffset   ===undefined ? undefined: area.OutlineOffset,
-            angle: area.Angle == -1? undefined: area.Angle,
+            outline_count:          area.OutlineCount == -1? undefined: area.OutlineCount,
+            outline_overlap_count:  area.OutlineOverlapCount  == -1? undefined: area.OutlineOverlapCount,
+            outline_offset:         area.OutlineOffset === undefined ? undefined: area.OutlineOffset,
+            angle:                  area.Angle === undefined ? undefined: area.Angle,
         };
     }
 

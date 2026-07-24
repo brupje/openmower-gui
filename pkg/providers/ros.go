@@ -586,6 +586,24 @@ func getInt32Prop(props map[string]interface{}, key string, defaultVal int32) in
 	return defaultVal
 }
 
+type mapAreaJSON struct {
+	Name                string                  `json:"Name"`
+	Active              bool                    `json:"Active"`
+	Area                geometry_msgs.Polygon   `json:"Area"`
+	Obstacles           []geometry_msgs.Polygon `json:"Obstacles,omitempty"`
+	Angle               *float64                `json:"Angle,omitempty"`
+	OutlineCount        int32                   `json:"OutlineCount"`
+	OutlineOverlapCount int32                   `json:"OutlineOverlapCount"`
+	OutlineOffset       *float64                `json:"OutlineOffset,omitempty"`
+}
+
+func floatToPtr(v float64) *float64 {
+	if math.IsNaN(v) {
+		return nil
+	}
+	return &v
+}
+
 func (p *RosProvider) jsonMapHandler(msg *std_msgs.String) {
 	var mapData jsonMapData
 	if err := json.Unmarshal([]byte(msg.Data), &mapData); err != nil {
@@ -595,6 +613,27 @@ func (p *RosProvider) jsonMapHandler(msg *std_msgs.String) {
 
 	// Convert to xbot_msgs.Map format
 	var result xbot_msgs.Map
+
+	type mapJSONResult struct {
+		WorkingArea     []mapAreaJSON `json:"WorkingArea"`
+		NavigationAreas []mapAreaJSON `json:"NavigationAreas"`
+		MapWidth        float64       `json:"MapWidth"`
+		MapHeight       float64       `json:"MapHeight"`
+		MapCenterX      float64       `json:"MapCenterX"`
+		MapCenterY      float64       `json:"MapCenterY"`
+		DockX           float64       `json:"DockX"`
+		DockY           float64       `json:"DockY"`
+		DockHeading     float64       `json:"DockHeading"`
+	}
+
+	var jsonOutput mapJSONResult
+	jsonOutput.MapWidth = result.MapWidth
+	jsonOutput.MapHeight = result.MapHeight
+	jsonOutput.MapCenterX = result.MapCenterX
+	jsonOutput.MapCenterY = result.MapCenterY
+	jsonOutput.DockX = result.DockX
+	jsonOutput.DockY = result.DockY
+	jsonOutput.DockHeading = result.DockHeading
 
 	// Calculate map bounds
 	minX, minY := math.MaxFloat64, math.MaxFloat64
@@ -634,10 +673,10 @@ func (p *RosProvider) jsonMapHandler(msg *std_msgs.String) {
 			mapArea.Area = outlineToPolygon(area.Outline)
 
 			if areaType == "mow" {
-				mapArea.Angle = getFloatProp(area.Properties, "angle", -1)
+				mapArea.Angle = getFloatProp(area.Properties, "angle", math.NaN())
 				mapArea.OutlineCount = getInt32Prop(area.Properties, "outline_count", -1)
 				mapArea.OutlineOverlapCount = getInt32Prop(area.Properties, "outline_overlap_count", -1)
-				mapArea.OutlineOffset = getFloatProp(area.Properties, "outline_offset", 0)
+				mapArea.OutlineOffset = getFloatProp(area.Properties, "outline_offset", math.NaN())
 
 				result.WorkingArea = append(result.WorkingArea, mapArea)
 				lastMowIndex = len(result.WorkingArea) - 1
@@ -663,6 +702,32 @@ func (p *RosProvider) jsonMapHandler(msg *std_msgs.String) {
 		}
 	}
 
+	for _, area := range result.WorkingArea {
+		jsonOutput.WorkingArea = append(jsonOutput.WorkingArea, mapAreaJSON{
+			Name:                area.Name,
+			Active:              area.Active,
+			Area:                area.Area,
+			Obstacles:           area.Obstacles,
+			Angle:               floatToPtr(area.Angle),
+			OutlineCount:        area.OutlineCount,
+			OutlineOverlapCount: area.OutlineOverlapCount,
+			OutlineOffset:       floatToPtr(area.OutlineOffset),
+		})
+	}
+
+	for _, area := range result.NavigationAreas {
+		jsonOutput.NavigationAreas = append(jsonOutput.NavigationAreas, mapAreaJSON{
+			Name:                area.Name,
+			Active:              area.Active,
+			Area:                area.Area,
+			Obstacles:           area.Obstacles,
+			Angle:               floatToPtr(area.Angle),
+			OutlineCount:        area.OutlineCount,
+			OutlineOverlapCount: area.OutlineOverlapCount,
+			OutlineOffset:       floatToPtr(area.OutlineOffset),
+		})
+	}
+
 	if minX != math.MaxFloat64 {
 		result.MapWidth = maxX - minX
 		result.MapHeight = maxY - minY
@@ -681,7 +746,7 @@ func (p *RosProvider) jsonMapHandler(msg *std_msgs.String) {
 	const topic = "/xbot_monitoring/map"
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
-	msgJson, err := json.Marshal(result)
+	msgJson, err := json.Marshal(jsonOutput)
 	if err != nil {
 		logrus.Error(xerrors.Errorf("failed to marshal map: %w", err))
 		return

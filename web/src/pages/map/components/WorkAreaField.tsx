@@ -50,7 +50,7 @@ export const WorkAreaFields = ({
                     onChange={(e) =>
                         setArea({
                             ...area,
-                            OutlineOffset: e.target.value===""?0: parseFloat(e.target.value),
+                            OutlineOffset: (e.target.value??"")===""? undefined: parseFloat(e.target.value),
                         })
                     }
                     autoFocus

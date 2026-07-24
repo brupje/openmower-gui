@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"math"
 	"net/http"
 	"time"
 
@@ -83,6 +84,27 @@ func ClearMapRoute(group *gin.RouterGroup, provider types.IRosProvider) {
 	})
 }
 
+type jsonAreaDetails struct {
+	Id                  string                  `json:"id"`
+	Name                string                  `json:"Name"`
+	Active              bool                    `json:"Active"`
+	Area                geometry_msgs.Polygon   `json:"Area"`
+	Obstacles           []geometry_msgs.Polygon `json:"Obstacles"`
+	Angle               *float64                `json:"Angle"`
+	OutlineCount        *int32                  `json:"OutlineCount"`
+	OutlineOverlapCount *int32                  `json:"OutlineOverlapCount"`
+	OutlineOffset       *float64                `json:"OutlineOffset"`
+}
+
+type jsonMapArea struct {
+	AreaDetails      jsonAreaDetails `json:"area"`
+	IsNavigationArea bool            `json:"isNavigationArea"` // <-- Vangt de isNavigationArea op
+}
+
+type jsonReplaceRequest struct {
+	Areas []jsonMapArea `json:"areas"`
+}
+
 // ReplaceMapRoute delete a map area
 //
 // @Summary clear the map and insert areas
@@ -100,14 +122,53 @@ func ReplaceMapRoute(group *gin.RouterGroup, provider types.IRosProvider) {
 			c.JSON(500, ErrorResponse{Error: err.Error()})
 			return
 		} else {
-			var CallReq mower_map.ReplaceMowingAreaSrvReq
-			err := unmarshalROSMessage[*mower_map.ReplaceMowingAreaSrvReq](c.Request.Body, &CallReq)
-			if err != nil {
-				c.JSON(500, ErrorResponse{Error: err.Error()})
+			var jsonReq jsonReplaceRequest
+			if err := c.ShouldBindJSON(&jsonReq); err != nil {
+				c.JSON(400, ErrorResponse{Error: err.Error()})
 				return
 			}
-			for _, element := range CallReq.Areas {
-				err = provider.CallService(c.Request.Context(), "/mower_map_service/add_mowing_area", &mower_map.AddMowingAreaSrv{}, &element, &mower_map.AddMowingAreaSrvRes{})
+
+			for _, area := range jsonReq.Areas {
+				var item = area.AreaDetails
+
+				rosArea := mower_map.MapArea{
+					Id:        item.Id,
+					Name:      item.Name,
+					Active:    item.Active,
+					Area:      item.Area,
+					Obstacles: item.Obstacles,
+				}
+
+				if item.Angle != nil {
+					rosArea.Angle = *item.Angle
+				} else {
+					rosArea.Angle = math.NaN()
+				}
+
+				if item.OutlineOffset != nil {
+					rosArea.OutlineOffset = *item.OutlineOffset
+				} else {
+					rosArea.OutlineOffset = math.NaN()
+				}
+
+				if item.OutlineCount != nil {
+					rosArea.OutlineCount = *item.OutlineCount
+				} else {
+					rosArea.OutlineCount = -1
+				}
+
+				if item.OutlineOverlapCount != nil {
+					rosArea.OutlineOverlapCount = *item.OutlineOverlapCount
+				} else {
+					rosArea.OutlineOverlapCount = -1
+				}
+
+				srvReq := &mower_map.AddMowingAreaSrvReq{
+					Area:             rosArea,
+					IsNavigationArea: area.IsNavigationArea,
+				}
+
+				err = provider.CallService(c.Request.Context(), "/mower_map_service/add_mowing_area", &mower_map.AddMowingAreaSrv{}, srvReq, &mower_map.AddMowingAreaSrvRes{})
 				if err != nil {
 					c.JSON(500, ErrorResponse{Error: err.Error()})
 					return

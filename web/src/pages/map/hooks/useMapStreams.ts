@@ -105,6 +105,10 @@ export function useMapStreams({
         (e) => {
             const parse = JSON.parse(e) as MapType;
             if (console.debug) console.debug(parse);
+
+            if (console.debug)
+                console.debug("New map", parse);
+
             setMap(parse);
             setMapKey("live");
         }
